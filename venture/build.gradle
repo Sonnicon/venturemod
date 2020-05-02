@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+}
+
+version 'ALPHA_1-0'
+
+sourceSets.main.java.srcDirs = ["src/"]
+sourceSets.main.resources.srcDirs = ["assets/"]
+
+dependencies{
+    implementation 'com.github.Sonnicon:Sonnicore:-SNAPSHOT'
+}

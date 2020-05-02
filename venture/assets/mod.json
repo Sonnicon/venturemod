@@ -1,0 +1,9 @@
+{
+  "name": "Venture",
+  "author": " [#8738ff]Sonnicon[]",
+  "description": "[red]Use with a bytelogic build of the game.\n[]Adds some new logic blocks to the game.",
+  "version": "ALPHA_1.0",
+  "main": "sonnicon.venture.Venture",
+  "dependencies": ["[#8855ff]sonnicore"],
+  "hidden": false
+}
