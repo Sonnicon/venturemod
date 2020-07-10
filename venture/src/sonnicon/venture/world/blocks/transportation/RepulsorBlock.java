@@ -10,6 +10,7 @@ import io.anuke.mindustry.game.Team;
 import io.anuke.mindustry.graphics.Pal;
 import io.anuke.mindustry.world.Block;
 import io.anuke.mindustry.world.Tile;
+import io.anuke.mindustry.world.blocks.BlockPart;
 import io.anuke.mindustry.world.blocks.logic.LogicBlock;
 import io.anuke.mindustry.world.blocks.power.PowerNode;
 import sonnicon.venture.types.OnMove;
@@ -90,7 +91,7 @@ public class RepulsorBlock extends ModLogicBlock{
         Tile newPos = tile.getNearby(direction);
         setIntermediates(newPos);
         if(intermediateBlock instanceof OnMove) ((OnMove) intermediateBlock).afterMoved(newPos, direction);
-        if(intermediateBlock.hasPower){
+        if(intermediateBlock.hasPower && !(intermediateBlock instanceof BlockPart)){
             if(intermediateBlock instanceof PowerNode){
                 for(int link : intermediateEntity.power.links.items){
                     world.tile(link).configure(tile.pos());
