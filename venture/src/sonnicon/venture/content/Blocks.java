@@ -4,6 +4,7 @@ import io.anuke.mindustry.content.Items;
 import io.anuke.mindustry.type.Category;
 import io.anuke.mindustry.type.ItemStack;
 import io.anuke.mindustry.world.Block;
+import io.anuke.mindustry.world.Tile;
 import sonnicon.venture.core.Loader;
 import sonnicon.venture.world.blocks.blockblocks.*;
 import sonnicon.venture.world.blocks.defence.*;
@@ -19,7 +20,7 @@ public class Blocks implements Loader.Load {
     public static Block duct, ductItemIO, ductLiquidIO, ductPowerIO, ductLogicIO,
             turretControllerBlock, logicDelay, logicSequencer, logicExtender, logicPressurepad, logicEntitydetector, logicEntitypointer, logicBlockSensor, logicRotator,
             foamBlock, hardFoamBlock, foamMechPad, foamNozzle,
-            repulsor, attractor, bracket, bracketdoor, playerChair, carrier, anchor,
+            repulsor, attractor, bracket, bracketAdhesive, bracketFrictionless, bracketdoor, playerChair, carrier, anchor,
             explosives,
             blockrelay, blockchest, blockbreaker, blockplacer, blocksorter, blockconfigurator, blockconstructor;
 
@@ -117,6 +118,28 @@ public class Blocks implements Loader.Load {
             BlockUtils.requirements(this, Categories.world, new ItemStack[]{new ItemStack(Items.silicon, 1)});
             health = 50;
         }};
+
+        bracketAdhesive = new BracketBlock(MOD_NAME + "bracketblock-adhesive"){{
+                BlockUtils.requirements(this, Categories.world, new ItemStack[]{new ItemStack(Items.silicon, 1)});
+                rotate = true;
+            }
+
+            @Override
+            protected boolean addNearbyFront(Tile tile, Tile front) {
+                return true;
+            }
+        };
+
+        bracketFrictionless = new BracketBlock(MOD_NAME + "bracketblock-frictionless"){{
+                BlockUtils.requirements(this, Categories.world, new ItemStack[]{new ItemStack(Items.silicon, 1)});
+                rotate = true;
+            }
+
+            @Override
+            protected boolean addNearbyFront(Tile tile, Tile front) {
+                return false;
+            }
+        };
 
         bracketdoor = new BracketDoor(MOD_NAME + "bracketdoor"){{
             BlockUtils.requirements(this, Categories.world, new ItemStack[]{new ItemStack(Items.silicon, 1)});
