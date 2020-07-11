@@ -4,6 +4,9 @@ import io.anuke.arc.util.Structs;
 import io.anuke.mindustry.content.Blocks;
 import io.anuke.mindustry.world.Tile;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class AttractorBlock extends RepulsorBlock{
     public AttractorBlock(String name){
         super(name);
@@ -21,6 +24,10 @@ public class AttractorBlock extends RepulsorBlock{
             tomove.clear();
             int reverserotation = (tile.rotation() + 2) % 4;
             if(canMove(tile.front().getNearby(tile.rotation()), reverserotation)){
+                //failsafe
+                Set<Tile> set = new HashSet<>(tomove);
+                tomove.clear();
+                tomove.addAll(set);
                 tomove.sort(Structs.comparing(t -> (reverserotation % 2 == 0 ? t.x : t.y) * (reverserotation > 1 ? 1 : -1)));
                 tomove.iterator().forEachRemaining(t -> move(t, reverserotation));
             }
