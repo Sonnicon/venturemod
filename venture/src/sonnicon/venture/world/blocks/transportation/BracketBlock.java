@@ -1,8 +1,9 @@
 package sonnicon.venture.world.blocks.transportation;
 
-import io.anuke.arc.collection.Array;
 import io.anuke.mindustry.world.Block;
 import io.anuke.mindustry.world.Tile;
+
+import java.util.ArrayList;
 
 public class BracketBlock extends Block{
     public BracketBlock(String name){
@@ -14,9 +15,9 @@ public class BracketBlock extends Block{
         hasShadow = false;
     }
 
-    public Array<Tile> getLinkedTiles(Tile tile, Array<Tile> tmpArray){
+    public ArrayList<Tile> getLinkedTiles(Tile tile, ArrayList<Tile> tmpArray, int direction){
         tmpArray.clear();
-        addNearby(tile, tmpArray);
+        addNearby(tile, tmpArray, direction);
         return tmpArray;
     }
 
@@ -25,13 +26,12 @@ public class BracketBlock extends Block{
         return other instanceof BracketBlock && other != this;
     }
 
-    protected void addNearby(Tile tile, Array<Tile> tmpArray){
+    protected void addNearby(Tile tile, ArrayList<Tile> tmpArray, int direction){
         if(tmpArray.contains(tile)) return;
         tmpArray.add(tile);
         for(Tile t : tile.entity().proximity()){
-            if((!rotate && t.block() instanceof BracketBlock) || (rotate && t == tile.front() && addNearbyFront(tile, t))){
-                addAsNearby(t, tmpArray);
-            }
+            if((rotate && t == tile.front() && t != tile.getNearbyLink(direction)) ? addNearbyFront(tile, t) : t.block() instanceof BracketBlock) addAsNearby(t, tmpArray, direction);
+
         }
     }
 
@@ -39,10 +39,8 @@ public class BracketBlock extends Block{
         return true;
     }
 
-    protected void addAsNearby(Tile tile, Array<Tile> tmpArray){
-        if(tile.block() instanceof BracketBlock)
-            ((BracketBlock)tile.block()).addNearby(tile, tmpArray);
-        else if(!tmpArray.contains(tile))
-            tmpArray.add(tile);
+    protected void addAsNearby(Tile tile, ArrayList<Tile> tmpArray, int direction){
+        if(tile.block() instanceof BracketBlock) ((BracketBlock)tile.block()).addNearby(tile, tmpArray, direction);
+        else if(!tmpArray.contains(tile)) tmpArray.add(tile);
     }
 }

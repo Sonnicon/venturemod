@@ -1,6 +1,5 @@
 package sonnicon.venture.world.blocks.transportation;
 
-import io.anuke.arc.collection.Array;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.graphics.g2d.Draw;
 import io.anuke.arc.util.Structs;
@@ -19,6 +18,10 @@ import sonnicon.venture.util.TileUtil;
 import sonnicon.venture.world.blocks.logic.ModLogicBlock;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static io.anuke.mindustry.Vars.world;
 import static sonnicon.venture.Venture.MOD_NAME;
@@ -33,7 +36,7 @@ public class RepulsorBlock extends ModLogicBlock{
     protected Field blockField;
 
     protected Tile origin;
-    protected Array<Tile> tilesDone = new Array<>(), tomove = new Array<>();
+    protected List<Tile> tilesDone = new ArrayList<>(), tomove = new ArrayList<>();
 
     public RepulsorBlock(String name){
         super(name);
@@ -48,8 +51,12 @@ public class RepulsorBlock extends ModLogicBlock{
             origin = tile;
             tilesDone.clear();
             tomove.clear();
-            if(canMove(tile.front(), tile.rotation())){
+            if(canMove(tile.front(), tile.rotation()) && !tomove.contains(tile)){
                 moving = true;
+                //failsafe
+                Set<Tile> set = new HashSet<>(tomove);
+                tomove.clear();
+                tomove.addAll(set);
                 tomove.sort(Structs.comparing(t -> (tile.rotation() % 2 == 0 ? t.x : t.y) * (tile.rotation() > 1 ? 1 : -1)));
                 tomove.iterator().forEachRemaining(t -> move(t, tile.rotation()));
                 moving = false;
@@ -61,8 +68,8 @@ public class RepulsorBlock extends ModLogicBlock{
         if(tile == null || tile == origin || (tile.block() instanceof SometimesMove && !((SometimesMove) tile.block()).shouldMove(tile, direction))) return false;
         if(tile.block() == Blocks.air || (tile.block() instanceof BracketBlock && tilesDone.contains(tile)) || (tile.block().isMultiblock() && tilesDone.contains(tile))) return true;
         if(tile.link().block().size > 1 || tile.block() instanceof BracketBlock){
-            Array<Tile> linked = new Array<Tile>();
-            TileUtil.getLinkedTiles(tile, linked);
+            ArrayList<Tile> linked = new ArrayList<Tile>();
+            TileUtil.getLinkedTiles(tile, linked, direction);
             tilesDone.addAll(linked);
             for(Tile t : linked){
                 Tile tother = t.getNearbyLink(direction);

@@ -1,18 +1,19 @@
 package sonnicon.venture.util;
 
-import io.anuke.arc.collection.Array;
 import io.anuke.arc.func.Cons;
 import io.anuke.mindustry.Vars;
 import io.anuke.mindustry.world.Tile;
 import sonnicon.venture.world.blocks.transportation.BracketBlock;
 
-public class TileUtil{
-    private static Array<Tile> tiles = new Array<>();
+import java.util.ArrayList;
 
-    public static void getLinkedTiles(Tile tile, Cons<Tile> cons){
+public class TileUtil{
+    private static ArrayList<Tile> tiles = new ArrayList<>();
+
+    public static void getLinkedTiles(Tile tile, Cons<Tile> cons, int direction){
         if(tile.block() instanceof BracketBlock){
             tiles.clear();
-            for(Tile t : getLinkedTiles(tile, tiles)){
+            for(Tile t : getLinkedTiles(tile, tiles, direction)){
                 cons.get(t);
             }
         }else{
@@ -35,12 +36,12 @@ public class TileUtil{
         }
     }
 
-    public static Array<Tile> getLinkedTiles(Tile tile, Array<Tile> tmpArray) {
+    public static ArrayList<Tile> getLinkedTiles(Tile tile, ArrayList<Tile> tmpArray, int direction) {
         if(tile.block() instanceof BracketBlock){
-            return ((BracketBlock) tile.block()).getLinkedTiles(tile, tmpArray);
+            return ((BracketBlock) tile.block()).getLinkedTiles(tile, tmpArray, direction);
         }else{
             tmpArray.clear();
-            getLinkedTiles(tile, tmpArray::add);
+            getLinkedTiles(tile, tmpArray::add, direction);
             return tmpArray;
         }
     }
