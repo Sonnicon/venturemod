@@ -125,8 +125,8 @@ public class Blocks implements Loader.Load {
             }
 
             @Override
-            protected boolean addNearbyFront(Tile tile, Tile front) {
-                return true;
+            public boolean bringWhenMoved(Tile tile, int direction){
+                return tile.getNearby(direction).block() instanceof BracketBlock || direction == tile.rotation();
             }
         };
 
@@ -136,8 +136,8 @@ public class Blocks implements Loader.Load {
             }
 
             @Override
-            protected boolean addNearbyFront(Tile tile, Tile front) {
-                return false;
+            public boolean bringWhenMoved(Tile tile, int direction){
+                return tile.getNearby(direction).block() instanceof BracketBlock && direction != tile.rotation();
             }
         };
 

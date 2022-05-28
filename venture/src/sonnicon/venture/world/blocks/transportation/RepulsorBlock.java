@@ -12,16 +12,13 @@ import io.anuke.mindustry.world.Tile;
 import io.anuke.mindustry.world.blocks.BlockPart;
 import io.anuke.mindustry.world.blocks.logic.LogicBlock;
 import io.anuke.mindustry.world.blocks.power.PowerNode;
-import sonnicon.venture.types.OnMove;
-import sonnicon.venture.types.SometimesMove;
+import sonnicon.venture.types.IMoveModifiers;
+import sonnicon.venture.types.IMoved;
 import sonnicon.venture.util.TileUtil;
 import sonnicon.venture.world.blocks.logic.ModLogicBlock;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import static io.anuke.mindustry.Vars.world;
 import static sonnicon.venture.Venture.MOD_NAME;
@@ -36,7 +33,7 @@ public class RepulsorBlock extends ModLogicBlock{
     protected Field blockField;
 
     protected Tile origin;
-    protected List<Tile> tilesDone = new ArrayList<>(), tomove = new ArrayList<>();
+    protected HashSet<Tile> tilesSearch = new HashSet<>();
 
     public RepulsorBlock(String name){
         super(name);
@@ -47,57 +44,87 @@ public class RepulsorBlock extends ModLogicBlock{
     public void update(Tile tile){
         super.update(tile);
         LogicEntity entity = tile.entity();
-        if(entity.nextSignal > 0 && entity.lastSignal == 0 && tile.front() != null && tile.front().block() != Blocks.air){
+        if(entity.nextSignal > 0 && entity.lastSignal == 0 && tile.front() != null){
             origin = tile;
-            tilesDone.clear();
-            tomove.clear();
-            if(canMove(tile.front(), tile.rotation()) && !tomove.contains(tile)){
+            if(searchMoveTiles(tile.front(), tile.rotation())){
                 moving = true;
-                //failsafe
-                Set<Tile> set = new HashSet<>(tomove);
-                tomove.clear();
-                tomove.addAll(set);
-                tomove.sort(Structs.comparing(t -> (tile.rotation() % 2 == 0 ? t.x : t.y) * (tile.rotation() > 1 ? 1 : -1)));
-                tomove.iterator().forEachRemaining(t -> move(t, tile.rotation()));
+                tilesSearch.stream().sorted(
+                                // Order tiles to move front-to-back based on direction
+                                Structs.comparing(t -> (tile.rotation() % 2 == 0 ? t.x : t.y) * (tile.rotation() > 1 ? 1 : -1)))
+                        .forEachOrdered(t -> move(t, tile.rotation()));
                 moving = false;
             }
         }
     }
 
-    protected boolean canMove(Tile tile, int direction){
-        if(tile == null || tile == origin || (tile.block() instanceof SometimesMove && !((SometimesMove) tile.block()).shouldMove(tile, direction))) return false;
-        if(tile.block() == Blocks.air || (tile.block() instanceof BracketBlock && tilesDone.contains(tile)) || (tile.block().isMultiblock() && tilesDone.contains(tile))) return true;
-        if(tile.link().block().size > 1 || tile.block() instanceof BracketBlock){
-            ArrayList<Tile> linked = new ArrayList<Tile>();
-            TileUtil.getLinkedTiles(tile, linked, direction);
-            tilesDone.addAll(linked);
-            for(Tile t : linked){
-                Tile tother = t.getNearbyLink(direction);
-                if(tother == null || ((t.block() instanceof BracketBlock ? !(tother.block() instanceof BracketBlock) : tother.link() != t.link()) && !canMove(tother, direction))) return false;
+    protected boolean searchMoveTiles(Tile startTile, int direction){
+        tilesSearch.clear();
+
+        HashSet<Tile> currentSet = new HashSet<>(), queueSet = new HashSet<>();
+        TileUtil.getMultiblockTiles(startTile, currentSet::add);
+
+        // Keep searching until we found everything
+        while(currentSet.size() > 0){
+            for(Tile tile : currentSet){
+                // don't move unmovable tile
+                if(!canMove(tile, direction)) return false;
+
+                Tile destination = tile.getNearby(direction);
+                // Don't move off the map
+                if(destination == null) return false;
+                // Queue block at destination to move away
+                if(destination.block() != null && destination.block() != Blocks.air){
+                    // Queue multiblocks
+                    if(destination.link().block().isMultiblock()){
+                        TileUtil.getMultiblockTiles(destination, queueSet::add);
+                    }else{
+                        queueSet.add(destination);
+                    }
+                }
+                // Queue other blocks brought along
+                if(tile.link().block() instanceof IMoveModifiers){
+                    for(int i = 0; i <= 3; i++){
+                        // We already looked this way
+                        if(i == direction) continue;
+
+                        if(((IMoveModifiers) tile.link().block()).bringWhenMoved(tile, i)){
+                            Tile other = tile.getNearby(i);
+                            if(other == null || other.block() == Blocks.air) continue;
+                            if(other.link().block().isMultiblock()){
+                                TileUtil.getMultiblockTiles(other, queueSet::add);
+                            }else{
+                                queueSet.add(other);
+                            }
+                        }
+                    }
+                }
             }
-            tomove.addAll(linked);
-            return true;
+            // Move tiles between sets and clear queue
+            tilesSearch.addAll(currentSet);
+            queueSet.removeAll(tilesSearch);
+            HashSet<Tile> temp = currentSet;
+            currentSet = queueSet;
+            queueSet = temp;
+            queueSet.clear();
         }
-        Tile other = tile.getNearbyLink(direction);
-        if(other == null) return false;
-        if(movable(tile) && (other.block() == Blocks.air || canMove(other, direction))){
-            tomove.add(tile);
-            return true;
-        }
-        return false;
+        return true;
     }
 
-    protected boolean movable(Tile tile){
-        return tile.breakable();
+    protected boolean canMove(Tile tile, int direction){
+        // Can't move null, ourselves, or tiles that don't want to move
+        return tile != null && tile != origin &&
+                ((tile.block() != null && tile.block() instanceof IMoveModifiers) ?
+                        ((IMoveModifiers) tile.block()).shouldMove(tile, direction) :
+                        tile.breakable());
     }
 
     protected void move(Tile tile, int direction){
         getIntermediates(tile);
-        if(intermediateBlock instanceof OnMove) ((OnMove) intermediateBlock).beforeMoved(tile, direction);
+        if(intermediateBlock instanceof IMoved) ((IMoved) intermediateBlock).beforeMoved(tile, direction);
         tile.setBlock(Blocks.air);
         Tile newPos = tile.getNearby(direction);
         setIntermediates(newPos);
-        if(intermediateBlock instanceof OnMove) ((OnMove) intermediateBlock).afterMoved(newPos, direction);
+        if(intermediateBlock instanceof IMoved) ((IMoved) intermediateBlock).afterMoved(newPos, direction);
         if(intermediateBlock.hasPower && !(intermediateBlock instanceof BlockPart)){
             if(intermediateBlock instanceof PowerNode){
                 for(int link : intermediateEntity.power.links.items){
@@ -142,8 +169,6 @@ public class RepulsorBlock extends ModLogicBlock{
         tile.entity.updateProximity();
         tile.updateOcclusion();
         world.notifyChanged(tile);
-
-
     }
 
     @Override

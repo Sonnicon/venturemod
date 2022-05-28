@@ -6,11 +6,11 @@ import io.anuke.mindustry.entities.Units;
 import io.anuke.mindustry.entities.type.Unit;
 import io.anuke.mindustry.world.Block;
 import io.anuke.mindustry.world.Tile;
-import sonnicon.venture.types.OnMove;
+import sonnicon.venture.types.IMoved;
 
 import static io.anuke.mindustry.Vars.tilesize;
 
-public class CarrierBlock extends Block implements OnMove{
+public class CarrierBlock extends Block implements IMoved{
     public Array<Unit> moved = new Array<>();
     public long lastFrameCleared = -1;
 

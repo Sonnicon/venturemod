@@ -7,11 +7,11 @@ import io.anuke.mindustry.world.Block;
 import io.anuke.mindustry.world.Edges;
 import io.anuke.mindustry.world.Tile;
 import sonnicon.venture.types.DuctNetwork;
-import sonnicon.venture.types.OnMove;
+import sonnicon.venture.types.IMoved;
 
 import static io.anuke.mindustry.Vars.world;
 
-public abstract class DuctType extends Block implements OnMove{
+public abstract class DuctType extends Block implements IMoved{
 
     public DuctType(String name){
         super(name);

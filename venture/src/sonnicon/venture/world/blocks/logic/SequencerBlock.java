@@ -26,7 +26,8 @@ public class SequencerBlock extends ModLogicBlock{
         super.update(tile);
         SequencerEntity entity = tile.entity();
         if(entity.signals.length == 0) return;
-        if(tile.back().block() instanceof LogicBlock && ((LogicBlock) tile.back().block()).sback(tile) != 0) return;
+        if(tile.back() != null && tile.back().block() instanceof LogicBlock &&
+                ((LogicBlock) tile.back().block()).sback(tile) != 0) return;
         entity.pointer = ++entity.pointer % entity.signals.length;
     }
 

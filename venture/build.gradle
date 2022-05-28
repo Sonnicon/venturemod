@@ -2,11 +2,11 @@ plugins {
     id 'java'
 }
 
-version 'ALPHA_1.1'
+version 'ALPHA_1.1.1'
 
 sourceSets.main.java.srcDirs = ["src/"]
 sourceSets.main.resources.srcDirs = ["assets/"]
 
 dependencies{
-    implementation 'com.github.Sonnicon:Sonnicore:-SNAPSHOT'
+    implementation 'com.github.Sonnicon:Sonnicore:545c6a9'
 }
