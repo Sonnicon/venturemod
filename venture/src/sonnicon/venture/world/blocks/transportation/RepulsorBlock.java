@@ -8,9 +8,11 @@ import io.anuke.mindustry.entities.type.TileEntity;
 import io.anuke.mindustry.game.Team;
 import io.anuke.mindustry.graphics.Pal;
 import io.anuke.mindustry.world.Block;
+import io.anuke.mindustry.world.Pos;
 import io.anuke.mindustry.world.Tile;
 import io.anuke.mindustry.world.blocks.BlockPart;
 import io.anuke.mindustry.world.blocks.logic.LogicBlock;
+import io.anuke.mindustry.world.blocks.logic.NodeLogicBlock;
 import io.anuke.mindustry.world.blocks.power.PowerNode;
 import sonnicon.venture.types.IMoveModifiers;
 import sonnicon.venture.types.IMoved;
@@ -134,6 +136,20 @@ public class RepulsorBlock extends ModLogicBlock{
             }
             intermediateEntity.power.graph.reflow(newPos);
         }
+        // Not ideal, but better than replacing the content
+        if(intermediateBlock instanceof NodeLogicBlock){
+            // Shift target node with source node
+            NodeLogicBlock.NodeLogicEntity entity = newPos.entity();
+            if(entity.link != Pos.invalid){
+                Tile o = world.tile(entity.link);
+                if(o != null){
+                    o = o.getNearby(direction);
+                    if(o != null){
+                        entity.link = o.pos();
+                    }
+                }
+            }
+        }
     }
 
     protected void getIntermediates(Tile tile){
@@ -165,7 +181,10 @@ public class RepulsorBlock extends ModLogicBlock{
     }
 
     protected void blockChanged(Tile tile){
-        tile.entity.init(tile, true);
+        tile.entity.tile = tile;
+        tile.entity.x = tile.drawx();
+        tile.entity.y = tile.drawy();
+        tile.entity.add();
         tile.entity.updateProximity();
         tile.updateOcclusion();
         world.notifyChanged(tile);
